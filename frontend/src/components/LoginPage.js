@@ -8,6 +8,9 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
 
+    const handleGoogleLogin = () => {
+        window.location.href = 'http://localhost:3001/auth/google';
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -42,6 +45,8 @@ const LoginPage = () => {
             <Link to="/signup">
                 <button type="button">Don't have an account? Signup</button>
             </Link>
+            <button type = "button" onClick={handleGoogleLogin}>Login with Google</button>
+
             {message && <p className="error">{message}</p>}
         </div>
     );
