@@ -10,6 +10,7 @@ const SignupPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
 
+    axios.defaults.withCredentials = true;
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
@@ -23,6 +24,9 @@ const SignupPage = () => {
                     password
                 });
                 setMessage(response.data.message);
+                if (response.data.loginStatus) {
+                    window.location.href = '/home';
+                }
             } catch (error) {
                 setMessage('Signup failed');
             }

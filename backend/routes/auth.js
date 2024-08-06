@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const passport = require("passport");
 
-// Route to handle successful login
 router.get("/login/success", (req, res) => {
     if (req.user) {
         res.status(200).json({
@@ -17,7 +16,6 @@ router.get("/login/success", (req, res) => {
     }
 });
 
-// Route to handle failed login
 router.get("/login/failed", (req, res) => {
     res.status(401).json({
         success: false,
@@ -25,22 +23,34 @@ router.get("/login/failed", (req, res) => {
     });
 });
 
-// Route to initiate Google login
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-// Google OAuth callback route
 router.get("/google/callback",
     passport.authenticate("google", { failureRedirect: "/login/failed" }),
     (req, res) => {
-        // Successful authentication, redirect home.
-        res.redirect("/"); // Redirect to homepage or other desired URL
+        if (req.user) {
+            req.session.email = req.user.email;
+            req.session.id = req.user._id;
+
+            res.cookie('email', req.user.email, {
+                maxAge: 24 * 60 * 60 * 1000,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+            });
+        }
+        res.redirect("http://localhost:3000/home");
     }
 );
 
-// Route to handle logout
 router.get("/logout", (req, res) => {
-    req.logout();
-    res.redirect("/");
+    req.logout(); 
+    req.session.destroy((err) => { 
+        if (err) {
+            return res.status(500).json({ message: 'Error logging out' });
+        }
+        res.clearCookie('connect.sid'); 
+        res.redirect("/"); 
+    });
 });
 
 module.exports = router;

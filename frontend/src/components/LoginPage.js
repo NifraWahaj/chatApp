@@ -8,6 +8,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
 
+    axios.defaults.withCredentials = true;
     const handleGoogleLogin = () => {
         window.location.href = 'http://localhost:3001/auth/google';
     };
@@ -19,6 +20,9 @@ const LoginPage = () => {
                 password
             });
             setMessage(response.data.message);
+            if (response.data.loginStatus === true) {
+                window.location.href = '/home';
+            }
         } catch (error) {
             setMessage('Login failed');
         }
