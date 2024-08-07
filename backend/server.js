@@ -13,6 +13,9 @@ const chatRequest = require('./models/chatRequest');
 const Message = require('./models/Message');
 const Chat = require('./models/Chat');
 const join = require('node:path');
+const { type } = require('node:os');
+const { link } = require('node:fs');
+const { time } = require('node:console');
 const app = express();
 const port = 3001;
 
@@ -38,6 +41,14 @@ app.use(passport.session());
 app.use(express.json());
 app.use("/auth", authRoute);
 require('dotenv').config();
+
+const ensureAuthenticated = (req, res, next) => {
+    if (req.session.email) {
+        return next();
+    } else {
+        res.status(401).json({ error: 'Not authenticated' });
+    }
+};
 
 const connectDB = async() =>{
     try {
@@ -91,7 +102,7 @@ passport.deserializeUser((id, done) => {
 
 
 app.get('/', async (req, res) => {
-    res.sendFile(join(__dirname, 'index.html'));
+    
 });
 
 app.post('/signup', async (req, res) => {
@@ -144,7 +155,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.get('/get-user', async (req, res) => {
+app.get('/get-user', ensureAuthenticated, async (req, res) => {
     try{
         if(!req.session.email){
             return res.status(401).json({ error: 'Not authenticated' });
@@ -168,7 +179,7 @@ app.get('/all-users', async (req, res) => {
 app.post('/send-chat-request', async (req, res) => {
     const { to } = req.body;
     const from = req.session.email;
-
+    console.log(from, to);
     if (!from) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
@@ -183,6 +194,9 @@ app.post('/send-chat-request', async (req, res) => {
 
         if (fromUser.friends.includes(to)) {
             return res.status(400).json({ message: 'Already friends with this user' });
+        } 
+        if(toUser.friends.includes(from)) {
+            return res.status(400).json({ message: 'Already friends with this user' });
         }
 
         const existingRequest = await chatRequest.findOne({ from, to });
@@ -193,6 +207,18 @@ app.post('/send-chat-request', async (req, res) => {
         const newRequest = new chatRequest({ from, to });
         await newRequest.save();
 
+        const notification = {
+            recipient: toUser._id,
+            message: `${from} wants to chat with you`,
+            type: 'chatRequest',
+            link: `http://localhost:3000/chatRequest`,
+            read: false,
+            timestamp: new Date()
+        }
+        await User.updateOne(
+            { email: to },
+            { $push: { notifications: notification } }
+        );
         res.status(200).json({ message: 'Chat request sent' });
     } catch (error) {
         res.status(500).json({ error: 'Error sending chat request' });
@@ -257,6 +283,20 @@ app.post('/accept-chat-request', async (req, res) => {
         if(! deleteRequest){
             return res.status(400).json({error: 'Request not found'});
         }
+
+        const notificationForFrom = {
+            recipient: userFrom._id,
+            message: `Your chat request to ${to} has been accepted.`,
+            type: 'chatRequest',
+            link: `http://localhost:3000/chat/${to}`, 
+            isRead: false
+        };
+
+        await User.updateOne(
+            { email: from },
+            { $push: { notifications: notificationForFrom } }
+        );
+
         res.status(200).json({ message: 'Chat request accepted' });
     } catch (error) {
         res.status(500).json({ error: 'Error accepting chat request' });
@@ -282,8 +322,9 @@ app.post('/reject-chat-request', async (req, res) => {
             return res.status(400).json({ error: 'No pending request found' });
         }
 
+        //Should we include notification for rejection?
        const deleteRequest = await chatRequest.findByIdAndDelete(id);
-       if(! deleteRequest){
+       if(!deleteRequest){
             return res.status(400).json({error: 'Request not found'});
        }
         res.status(200).json({ message: 'Chat request rejected' });
@@ -321,15 +362,12 @@ const server = app.listen(port, (error) => {
     console.log(`Example app listening at http://localhost:${port}`);
 });
 
-//Server = sc
 const io = socketIo(server, {
     cors: {
         origin: 'http://localhost:3000', 
         methods: ['GET', 'POST']
     }
 });
-
-const users = {};
 
 io.on('connection', (socket) => {
     console.log('A user connected');
@@ -344,7 +382,6 @@ io.on('connection', (socket) => {
 
         const messageWithTimestamp = {
             content: msg.content,
-            chatId: msg.chatId,
             sender: msg.sender,
             timestamp: new Date()  
         };
@@ -372,23 +409,133 @@ io.on('connection', (socket) => {
 
 app.post('/create-or-fetch-chat', async (req, res) => {
     const { participants } = req.body;
-
+    console.log('Received participants:', participants);
     if (!participants || participants.length < 2) {
         return res.status(400).json({ error: 'At least two participants required' });
     }
 
-    try {
+     try {
         let chat = await Chat.findOne({ participants: { $all: participants } });
 
         if (!chat) {
             chat = new Chat({ participants });
             await chat.save();
         }
-
+        console.log('Chat created or fetched:', chat);
+        console.log('Chat Participants:', chat.participants);
         res.status(200).json(chat);
     } catch (error) {
         res.status(500).json({ error: 'Error creating or fetching chat' });
     }
 });
 
+app.get('/notifications', ensureAuthenticated, async (req, res) => {
+    const email = req.session.email;
 
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json(user.notifications);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching notifications' });
+    }
+});
+
+app.put('/update-notification/:id', async (req, res) => {
+    const { id } = req.params;
+    const { email } = req.session; 
+
+    if (!email) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const notificationIndex = user.notifications.findIndex(notification => notification._id.toString() === id);
+
+        if (notificationIndex === -1) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        user.notifications[notificationIndex].read = true;
+        await user.save();
+
+        res.status(200).json(user.notifications[notificationIndex]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/remove-friend/:friendEmail', async (req, res) => {
+    const { friendEmail } = req.params;
+    const { email } = req.session;
+
+    if (!email) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+    try{
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const friend = await User.findOne({ email: friendEmail });
+        if (!friend) {
+            return res.status(404).json({ error: 'Friend not found' });
+        }
+        user.friends = user.friends.filter(friend => friend !== friendEmail);
+        await user.save();
+
+        friend.friends = friend.friends.filter(friend => friend !== email);
+        await friend.save();
+
+        const chat = await Chat.findOneAndDelete({
+            participants: { $all: [email, friendEmail] }
+        });
+
+        if (!chat) {
+            console.log('No chat found between user and friend');
+        }
+
+        res.status(200).json({ message: 'Friend removed successfully' });
+    } catch(error){
+        res.status(500).json({ error: 'Error removing friend' });
+    }
+});
+
+app.delete('/delete-profile', async (req, res) => {
+    const email = req.session.email;
+
+    try {
+        const userToDelete = await User.findOne({ email });
+
+        if (!userToDelete) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        await User.updateMany(
+            { friends: email },
+            { $pull: { friends: email } }
+        );
+
+        await Chat.deleteMany({
+            participants: email
+        });
+
+        await User.deleteOne({ email });
+
+        res.status(200).json({ message: 'User and related data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
