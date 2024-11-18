@@ -46,10 +46,14 @@ const LoginPage = () => {
                 />
                 <button type="submit">Login</button>
             </form>
-            <Link to="/signup">
-                <button type="button">Don't have an account? Signup</button>
-            </Link>
-            <button type = "button" onClick={handleGoogleLogin}>Login with Google</button>
+            <div className="button-group">
+                <Link to="/signup">
+                    <button type="button">Don't have an account? Signup</button>
+                </Link>
+                <button className='other-login-btn' type="button" onClick={handleGoogleLogin}>
+                    Login with Google
+                </button>
+            </div>
 
             {message && <p className="error">{message}</p>}
         </div>

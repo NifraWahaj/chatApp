@@ -43,7 +43,7 @@ router.get("/google/callback",
 );
 
 router.get('/logout', (req, res) => {
-    req.logout((err) => {  // Pass a callback function to handle errors
+    req.logout((err) => { 
         if (err) {
             return res.status(500).json({ message: 'Error logging out' });
         }
@@ -51,8 +51,8 @@ router.get('/logout', (req, res) => {
             if (err) {
                 return res.status(500).json({ message: 'Error destroying session' });
             }
-            res.clearCookie('connect.sid'); // Clear the session cookie
-            res.json({ message: 'Logout successful' }); // Respond with a success message
+            res.clearCookie('connect.sid'); 
+            res.json({ message: 'Logout successful' }); 
         });
     });
 });

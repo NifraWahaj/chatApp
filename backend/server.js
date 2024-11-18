@@ -539,3 +539,73 @@ app.delete('/delete-profile', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+app.get('/get-chats', async (req, res) => {
+    const email = req.session.email;
+    console.log('Session email:', email);
+    if (!email) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    } 
+    try{
+        const chats = await Chat.find({ participants: email });
+        if(chats.length === 0){
+            return res.status(404).json({ error: 'No chats found' });
+        }
+        const filteredChats = chats.filter(chat => chat.messages.length > 0);
+
+        if (filteredChats.length === 0) {
+            return res.status(404).json({ error: 'No chats found' });
+        }
+
+        const sortedChats = filteredChats.sort((a, b) => {
+            const aLastMessage = a.messages[a.messages.length - 1];
+            const bLastMessage = b.messages[b.messages.length - 1];
+            if(!aLastMessage || !bLastMessage){
+                return 0;
+            }
+            return new Date(bLastMessage.timestamp) - new Date(aLastMessage.timestamp);
+        });
+
+        const chatsWithLastMessageTime = sortedChats.map(chat => {
+            const lastMessage = chat.messages[chat.messages.length - 1];
+            return {
+                ...chat.toObject(),
+                lastMessageTime: lastMessage ? lastMessage.timestamp : null,
+            };
+        });
+        res.status(200).json(chatsWithLastMessageTime);
+    }catch (error){
+        res.status(500).json({ error: 'Error fetching chats' });
+    }
+});
+
+app.delete('/delete-notification/:id', async (req, res) => {
+    const { id } = req.params;
+    const { email } = req.session; 
+
+    if (!email) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const notificationIndex = user.notifications.findIndex(notification => notification._id.toString() === id);
+
+        if (notificationIndex === -1) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        user.notifications.splice(notificationIndex, 1);
+        await user.save();
+
+        res.status(200).json({ message: 'Notification deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});

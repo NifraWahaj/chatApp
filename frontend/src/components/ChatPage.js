@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import "./ChatPage.css";
+import PrimarySearchAppBar from './PrimarySearchAppBar';
 
 const ChatPage = () => {
     const { friendEmail } = useParams();
@@ -71,19 +73,33 @@ const ChatPage = () => {
 
     return (
         <div>
-            <h2>Chatting with {friendEmail}</h2>
-            <ul>
+            <PrimarySearchAppBar />
+            <div className="chat-container">
+            <h2 className="chat-title">Chatting with {friendEmail}</h2>
+            <ul className="messages-list">
                 {messages.map((msg, index) => (
-                    <li key={index}>{msg.content} ({msg.sender}) {new Date(msg.timestamp).toLocaleTimeString()}</li>
+                    <li
+                        className={`message-item ${msg.sender === currentUserEmail ? 'current-user' : 'other-user'}`}
+                        key={index} >
+                        <div className="message-sender">{msg.sender}</div>
+                        <div className="message-content">{msg.content}</div>
+                        <div className="message-timestamp">
+                            {new Date(msg.timestamp).toLocaleTimeString()}
+                        </div>
+                    </li>
                 ))}
             </ul>
-            <input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message"
-            />
-            <button onClick={sendMessage}>Send</button>
+            <div className="button-container">
+                    <input
+                        className="input-container"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Type your message"
+                    />
+                    <button onClick={sendMessage}>Send</button>
+                </div>
         </div>
+    </div>
     );
 };
 

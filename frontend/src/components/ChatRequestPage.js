@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import "./ChatRequestPage.css";
 const ChatRequestPage = () => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -82,43 +82,47 @@ const ChatRequestPage = () => {
 
     return (
         <div>
-            <h2>Search Users</h2>
+            <div className="search-container">
+            <h2  className="search-title">Search Users</h2>
             <input
                 type="text"
                 placeholder="Search by email"
                 value={searchQuery}
                 onChange={handleSearchChange}
             />
-
-            {users.length === 0 && <p>No users found</p>}
             
-            {users
-                .filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map(user => (
-                    <div key={user.email}>
-                        <p>{user.name} ({user.email})</p>
-                        <button onClick={() => handleSendChatRequest(user.email)}>Send Chat Request</button>
-                    </div>
-            ))}
+            {users.length === 0 && <p className="no-results">No users found</p>}
+                
+            <div className="user-list">
+                {users
+                    .filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(user => (
+                        <div key={user.email} className="user-item">
+                            <p className="user-info">{user.name} ({user.email})</p>
+                            <button className="send-request-button" onClick={() => handleSendChatRequest(user.email)}>Send Chat Request</button>
+                        </div>
+                ))}
+            </div>
 
-            <button onClick={fetchChatRequests}>Show Pending Requests</button>
+            <button className="show-requests-button" onClick={fetchChatRequests}>Show Pending Requests</button>
 
             {showRequests && (
-                <div>
-                    <h2>Pending Chat Requests</h2>
-                    {requests.length === 0 && <p>No pending requests</p>}
+                <div className="requests-container">
+                    <h2 className="requests-title">Pending Chat Requests</h2>
+                    {requests.length === 0 && <p className="no-results">No pending requests</p>}
                     {requests.map((request) => (
-                        <div key={`${request.from}-${request.to}`}>
+                        <div key={`${request.from}-${request.to}`} className="request-item">
                             <p>{request.from} wants to chat with you</p>
-                            <button onClick={() => handleAccept(request)}>Accept</button>
-                            <button onClick={() => handleReject(request)}>Reject</button>
+                            <button className="accept-button" onClick={() => handleAccept(request)}>Accept</button>
+                            <button className="reject-button" onClick={() => handleReject(request)}>Reject</button>
                         </div>
                     ))}
                 </div>
             )}
             
-            {message && <p>{message}</p>}
-            {error && <p>{error}</p>}
+            {message && <p className="status-message">{message}</p>}
+            {error && <p className="status-error">{error}</p>}
+        </div>
         </div>
     );
 };

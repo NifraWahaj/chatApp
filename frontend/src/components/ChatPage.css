@@ -1,8 +1,109 @@
-#form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-#input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-#input:focus { outline: none; }
-#form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+.chat-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+}
 
-#messages { list-style-type: none; margin: 0; padding: 0; }
-#messages > li { padding: 0.5rem 1rem; }
-#messages > li:nth-child(odd) { background: #efefef; }
+
+.chat-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.messages-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+
+.message-item {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: 5px 0;
+}
+
+.message-item.current-user {
+    align-items: flex-end;
+    padding-top: 10px;
+}
+
+
+.message-item.other-user {
+    align-items: flex-start;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.message-sender {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+
+.message-content {
+    margin-bottom: 5px;
+    font-size: 16px;
+    max-width: 65%; 
+    word-wrap: break-word; 
+}
+
+
+.message-timestamp {
+    font-size: 0.75rem;
+    color: #888;
+    position: absolute;
+    padding-top: 10px;
+    bottom: 10px;
+    right: 10px;
+    
+}
+
+
+.input-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    width: calc(90% - 30px); 
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+
+button {
+    background-color: #2f8aec;
+    border: none;
+    height: 2.5rem;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 10px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto; 
+}
