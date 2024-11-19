@@ -70,13 +70,13 @@ Logout, Login, Signup
 
 ### Backend
 
-* **Models** :
+ **Models** :
 * `Chat`: Handles message history and participants for chats.
 * `ChatRequest`: Manages chat request statuses.
 * `Group`: Schema for managing group chats (to be implemented).
 * `Notification`: Schema for notifications.
 * `User`: Schema for user profiles, including friends and notifications.
-* **Routes** :
+ **Routes** :
 * `/auth`: Manages user authentication and Google OAuth.
 * `/chat`: Handles chat creation and real-time communication.
 * `/users`: Fetches user and friend data.
