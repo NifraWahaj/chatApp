@@ -84,7 +84,7 @@ Logout, Login, Signup
 
 ### Frontend
 
-* **Pages** :
+ **Pages** :
 * `LoginPage`: Login functionality with Google OAuth.
 * `SignupPage`: User signup with validation.
 * `HomePage`: Displays friends, chat list, and notifications.
@@ -107,14 +107,9 @@ Logout, Login, Signup
 * `GET /all-users`: Fetch all registered users.
 * `GET /get-friends`: Fetch the user's friend list.
 
-### Chat
-
-* `POST /create-or-fetch-chat`: Create or retrieve a one-to-one chat.
-
 ### Chat Requests
 
 * `POST /send-chat-request`: Send a chat request.
-* 
 * `POST /accept-chat-request`: Accept a chat request.
 * `POST /reject-chat-request`: Reject a chat request.
 
