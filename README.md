@@ -1,4 +1,4 @@
-# Buzz Chat Application
+# Buzz - Chat Application
 
 A real-time chat application to connect, chat, and share moments. The app allows users to send chat requests, accept/reject them, and chat in real time. It also supports Google OAuth for seamless login and includes notifications, friend management, and responsive UI.
 
